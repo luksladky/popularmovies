@@ -27,7 +27,7 @@ public class DetailActivityFragment extends Fragment {
 
         if (intent != null) {
             //String mMovieTitle = intent.getStringExtra(Intent.EXTRA_TITLE);
-            Movie movie = intent.getParcelableExtra("movieObj");
+            Movie movie = intent.getParcelableExtra(Constants.parcMovieObjKey);
             ((TextView) rootView.findViewById(R.id.detail_movie_title)).setText(movie.getTitle());
             ((TextView) rootView.findViewById(R.id.detail_release_year)).setText(movie.getYear());
             ((TextView) rootView.findViewById(R.id.detail_user_rating)).setText(movie.getUserRating()+"/10");

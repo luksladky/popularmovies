@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -42,32 +41,44 @@ public class PostersFragment extends Fragment {
 
     private String sortingOrder;
     private ImageAdapter mImageAdapter;
-    private Movie[] mMoviesData;
+    private ArrayList<Movie> mMoviesData;
+    
     public PostersFragment() {
     }
 
-    private void updateMovies() {
+    private void updateMoviesData() {
         new FetchMoviesTask().execute(getPreferredSortingOrder());
+        //showToast("fetching data from internet");
     }
 
-    public boolean isNetworkAvailable() {
+    private boolean isNetworkAvailable() {
         ConnectivityManager cm =
                 (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    public String getPreferredSortingOrder() {
+    private void handleOfflineState() {
+        Log.e(LOG_TAG, "Network is not available");
+
+        CharSequence text = getString(R.string.network_not_available_message);
+        showToast(text.toString());
+    }
+
+    private String getPreferredSortingOrder() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         return prefs.getString(getString(R.string.pref_sort_key),
                 getString(R.string.pref_posters_sort_popularity));
+    }
+
+    public void showToast(String message) {
+        Toast.makeText(getActivity(),message,Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        sortingOrder = getPreferredSortingOrder(); //TODO check if this is okay
     }
 
     @Override
@@ -79,16 +90,25 @@ public class PostersFragment extends Fragment {
 
         if(savedInstanceState != null){
             //get back your data and populate the adapter here
-            //ArrayList<Result> result_saved =  savedInstanceState.getParcelableArrayList(MOVIES_KEY);
+
+            mMoviesData = savedInstanceState.getParcelableArrayList(Constants.parcMoviesKey);
+            sortingOrder = savedInstanceState.getString(Constants.parcSortKey);
+
+
         }else{
-            updateMovies();
-            // updateMovies();
+            mMoviesData  = new ArrayList<Movie>();
+            sortingOrder = getPreferredSortingOrder();
+            if (isNetworkAvailable()) {
+                updateMoviesData();
+            } else {
+                handleOfflineState();
+            }
         }
 
 
         mImageAdapter = new ImageAdapter(
                 rootView.getContext(),
-                new ArrayList<Movie>());
+                mMoviesData);
 
         GridView gridview = (GridView) rootView.findViewById(R.id.gridview);
         gridview.setAdapter(mImageAdapter);
@@ -97,8 +117,8 @@ public class PostersFragment extends Fragment {
 
                 Movie item = (Movie) mImageAdapter.getItem(position);
                 Intent intent = new Intent(getActivity(), DetailActivity.class)
-                        .putExtra("movieObj", item);
-                //Toast.makeText(rootView.getContext(),item.getTitle(),Toast.LENGTH_SHORT).show();
+                        .putExtra(Constants.parcMovieObjKey, item);
+
 
                 startActivity(intent);
 
@@ -109,37 +129,18 @@ public class PostersFragment extends Fragment {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        int id = item.getItemId();
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        //TODO saveInstanceState
-
-    }
-
-    @Override
     public void onResume() {
         super.onResume(); // Always call the superclass method first
         // Test Network
         if (!isNetworkAvailable()) {
-            Log.e(LOG_TAG, "Network is not available");
-
-            CharSequence text = getString(R.string.network_not_available_message);
-            Toast toast = Toast.makeText(getActivity(), text, Toast.LENGTH_LONG);
-            toast.show();
+            handleOfflineState();
         } else {
             String newSortingOrder = getPreferredSortingOrder();
 
             if (newSortingOrder != null && !newSortingOrder.equals(sortingOrder)) {
                 Log.d(LOG_TAG, "updating movies via API call");
                 sortingOrder = newSortingOrder;
-                updateMovies();
+                updateMoviesData();
             }
 
 
@@ -150,6 +151,8 @@ public class PostersFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
+        outState.putString(Constants.parcSortKey, sortingOrder);
+        outState.putParcelableArrayList(Constants.parcMoviesKey, mMoviesData);
 
     }
 
@@ -190,26 +193,19 @@ public class PostersFragment extends Fragment {
                 moviesArray[i] = new Movie(movieTitle,posterImageUrl, movieOverview, movieRating, movieReleaseDate);
             }
 
-
             return moviesArray;
         }
 
-
-
         @Override
         protected Movie[] doInBackground(String... params) {
-
-
-            String api_key = ""; //TODO add api key
+            
             String sortBy  = params[0]+".desc" ;
-            int voteCountGte = 500;
+            String minVoteCount = Integer.toString(Constants.minVoteCount);
 
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
-
-            // Will contain the raw JSON response as a string.
             String moviesJSONStr = null;
 
             try {
@@ -220,10 +216,11 @@ public class PostersFragment extends Fragment {
 
                 Uri buildUri = Uri.parse(BASE_URL).buildUpon()
                         .appendQueryParameter(SORT_PARAM, sortBy)
-                        .appendQueryParameter(VOTE_COUNT_PARAM, Integer.toString(voteCountGte))
-                        .appendQueryParameter(API_KEY_PARAM, api_key)
+                        .appendQueryParameter(VOTE_COUNT_PARAM, minVoteCount)
+                        .appendQueryParameter(API_KEY_PARAM, Constants.API_KEY)
                         .build();
-                //URL url = new URL("http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=0db781196aa1b1144bdd2346e1ae4631");
+                // Will contain the raw JSON response as a string.
+                
                 URL url = new URL(buildUri.toString());
                 // Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -246,6 +243,8 @@ public class PostersFragment extends Fragment {
                     // buffer for debugging.
                     buffer.append(line + "\n");
                 }
+                
+                
 
                 if (buffer.length() == 0) {
                     // Stream was empty.  No point in parsing.
@@ -288,13 +287,13 @@ public class PostersFragment extends Fragment {
         @Override
         protected void onPostExecute(Movie[] result) {
             super.onPostExecute(result);
-            mImageAdapter.clear();
+            mMoviesData.clear();
             for (int i = 0; i < result.length; i++) {
                 //Log.v(LOG_TAG, result[i].getTitle());
-                mImageAdapter.add(result[i]);
+                mMoviesData.add(result[i]);
             }
-            mImageAdapter.notifyDataSetChanged();
 
+            mImageAdapter.notifyDataSetChanged();
         }
     }
 }
