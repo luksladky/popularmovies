@@ -1,0 +1,14 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <dimen name="fragment_poster_horizontal_vertical_padding">0dp</dimen>
+    <dimen name="fragment_poster_horizontal_horizontal_padding">0dp</dimen>
+
+    <dimen name="detail_movie_title">48dp</dimen>
+    <dimen name="detail_meta_margin_left">16dp</dimen>
+    <dimen name="detail_rating_margin_top">16dp</dimen>
+    <dimen name="detail_overview_divider_margin_top">16dp</dimen>
+    <dimen name="detail_overview_margin_top">16dp</dimen>
+</resources>
