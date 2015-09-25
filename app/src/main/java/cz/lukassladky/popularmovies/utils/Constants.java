@@ -1,4 +1,4 @@
-package cz.lukassladky.popularmovies;
+package cz.lukassladky.popularmovies.utils;
 
 /**
  * Created by admin on 30.8.2015.

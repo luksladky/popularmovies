@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import cz.lukassladky.popularmovies.utils.Constants;
+
 /**
  * A placeholder fragment containing a simple view.
  */
