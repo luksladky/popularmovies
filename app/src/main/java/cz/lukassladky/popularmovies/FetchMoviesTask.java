@@ -1,6 +1,5 @@
 package cz.lukassladky.popularmovies;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -25,11 +24,16 @@ import cz.lukassladky.popularmovies.utils.Constants;
 public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
 
     private String LOG_TAG = FetchMoviesTask.class.getSimpleName();
-    Context mContext;
+    FetchMovieListener mResultListener;
     ArrayList<Movie> mMoviesData;
+    ImageAdapter mImageAdapter;
 
-    public FetchMoviesTask(Context context, ArrayList<Movie> movieData) {
-        mContext = context;
+    interface FetchMovieListener {
+        public void onDataFetched();
+    }
+
+    public FetchMoviesTask(FetchMovieListener context, ArrayList<Movie> movieData) {
+        mResultListener = context;
         mMoviesData = movieData;
     }
 
@@ -90,7 +94,7 @@ public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
             Uri buildUri = Uri.parse(BASE_URL).buildUpon()
                     .appendQueryParameter(SORT_PARAM, sortBy)
                     .appendQueryParameter(VOTE_COUNT_PARAM, minVoteCount)
-                    .appendQueryParameter(API_KEY_PARAM, Constants.API_KEY)
+                    .appendQueryParameter(API_KEY_PARAM, Constants.MOVIEDB_API_KEY)
                     .build();
             // Will contain the raw JSON response as a string.
 
@@ -166,6 +170,6 @@ public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
             mMoviesData.add(result[i]);
         }
 
-        mImageAdapter.notifyDataSetChanged();
+        mResultListener.onDataFetched();
     }
 }

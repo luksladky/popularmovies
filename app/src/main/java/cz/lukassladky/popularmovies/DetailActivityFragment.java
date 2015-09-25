@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import cz.lukassladky.popularmovies.utils.Constants;
 
 /**
@@ -18,30 +20,34 @@ import cz.lukassladky.popularmovies.utils.Constants;
  */
 public class DetailActivityFragment extends Fragment {
 
+
     public DetailActivityFragment() {
     }
+
+    @Bind(R.id.detail_movie_title) TextView movie_title_textview;
+    @Bind(R.id.detail_release_year) TextView release_year_textview;
+    @Bind(R.id.detail_user_rating) TextView user_rating_textview;
+    @Bind(R.id.detail_overview) TextView overview_textview;
+    @Bind(R.id.detail_poster_image) ImageView detail_poster_imageview;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         Intent intent = getActivity().getIntent();
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
+        ButterKnife.bind(this, rootView);
 
         if (intent != null) {
-            //String mMovieTitle = intent.getStringExtra(Intent.EXTRA_TITLE);
             Movie movie = intent.getParcelableExtra(Constants.parcMovieObjKey);
-            ((TextView) rootView.findViewById(R.id.detail_movie_title)).setText(movie.getTitle());
-            ((TextView) rootView.findViewById(R.id.detail_release_year)).setText(movie.getYear());
-            ((TextView) rootView.findViewById(R.id.detail_user_rating)).setText(movie.getUserRating()+"/10");
-            ((TextView) rootView.findViewById(R.id.detail_overview)).setText(movie.getPlotOverview());
-
-
-            ImageView imageView = (ImageView) rootView.findViewById(R.id.detail_poster_image);
+            movie_title_textview.setText(movie.getTitle());
+            release_year_textview.setText(movie.getYear());
+            user_rating_textview.setText(movie.getUserRating() + "/10");
+            overview_textview.setText(movie.getPlotOverview());
             Picasso.with(rootView.getContext())
                     .load(movie.getPosterUrl())
                     .error(R.drawable.error)
                     .placeholder(R.drawable.placeholder)
-                    .into(imageView);
+                    .into(detail_poster_imageview);
         }
 
 

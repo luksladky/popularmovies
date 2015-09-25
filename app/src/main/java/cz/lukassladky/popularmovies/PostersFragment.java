@@ -1,11 +1,8 @@
 package cz.lukassladky.popularmovies;
 
 import android.app.Fragment;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -18,6 +15,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import butterknife.Bind;
 import cz.lukassladky.popularmovies.utils.Constants;
 import cz.lukassladky.popularmovies.utils.Utility;
 
@@ -25,7 +23,7 @@ import cz.lukassladky.popularmovies.utils.Utility;
  * A placeholder fragment containing a simple view.
  */
 
-public class PostersFragment extends Fragment {
+public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMovieListener {
 
 
     private String LOG_TAG = PostersFragment.class.getSimpleName();
@@ -38,8 +36,15 @@ public class PostersFragment extends Fragment {
     }
 
     private void updateMoviesData() {
-        new FetchMoviesTask(getActivity(), mMoviesData).execute(getPreferredSortingOrder());
+        new FetchMoviesTask(this, mMoviesData).execute(getPreferredSortingOrder());
         //showToast("fetching data from internet");
+    }
+
+    @Override
+    public void onDataFetched() {
+        if (mImageAdapter != null) {
+            mImageAdapter.notifyDataSetChanged();
+        }
     }
 
 
@@ -66,6 +71,8 @@ public class PostersFragment extends Fragment {
         setHasOptionsMenu(true);
     }
 
+    @Bind(R.id.gridview) GridView gridView;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -81,7 +88,7 @@ public class PostersFragment extends Fragment {
 
 
         }else{
-            mMoviesData  = new ArrayList<Movie>();
+            mMoviesData  = new ArrayList<>();
             sortingOrder = getPreferredSortingOrder();
             if (Utility.isNetworkAvailable(getActivity())) {
                 updateMoviesData();
@@ -95,12 +102,13 @@ public class PostersFragment extends Fragment {
                 rootView.getContext(),
                 mMoviesData);
 
-        GridView gridview = (GridView) rootView.findViewById(R.id.gridview);
-        gridview.setAdapter(mImageAdapter);
-        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        //ButterKnife.bind(this,rootView);
+        GridView gridView = (GridView) rootView.findViewById(R.id.gridview);
+        gridView.setAdapter(mImageAdapter);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
 
-                Movie item = (Movie) mImageAdapter.getItem(position);
+                Movie item = mImageAdapter.getItem(position);
                 Intent intent = new Intent(getActivity(), DetailActivity.class)
                         .putExtra(Constants.parcMovieObjKey, item);
 
@@ -117,7 +125,7 @@ public class PostersFragment extends Fragment {
     public void onResume() {
         super.onResume(); // Always call the superclass method first
         // Test Network
-        if (!isNetworkAvailable()) {
+        if (!Utility.isNetworkAvailable(getActivity())) {
             handleOfflineState();
         } else {
             String newSortingOrder = getPreferredSortingOrder();
