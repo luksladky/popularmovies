@@ -9,7 +9,7 @@ import android.provider.BaseColumns;
  */
 public class MoviesContract {
 
-    public static final String CONTENT_AUTHORITY = "cz.lukassladky.pupularmovies";
+    public static final String CONTENT_AUTHORITY = "cz.lukassladky.popularmovies";
 
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
@@ -20,9 +20,9 @@ public class MoviesContract {
     public static class MoviesEntry implements BaseColumns {
         public static final String TABLE_NAME = "movies";
 
-        public static final String COLUMN_THEMOVIEDB_KEY = "db_api_key";
+        public static final String COLUMN_THEMOVIEDB_ID = "db_api_key";
         public static final String COLUMN_TITLE = "title";
-        public static final String COLUMN_POSTER_KEY = "poster_key";
+        public static final String COLUMN_POSTER_URL = "poster_key";
         public static final String COLUMN_RATING = "rating";
         public static final String COLUMN_RELEASE = "released";
         public static final String COLUMN_DESCRIPTION = "description";
@@ -39,6 +39,9 @@ public class MoviesContract {
 
         public static Uri buildMovieUri(long id) {
             return CONTENT_URI.buildUpon().appendPath("id").appendPath(Long.toString(id)).build();
+        }
+        public static Uri buildMovieWithOMDBIdUri(String id) {
+            return CONTENT_URI.buildUpon().appendPath(id).build();
         }
 
         public static long getIdFromUri(Uri uri) {
@@ -85,6 +88,10 @@ public class MoviesContract {
 
         public static final String CONTENT_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_TRAILERS;
+
+        public static Uri buildTrailerWithMovieUri(long movie_id) {
+            return CONTENT_URI.buildUpon().appendPath(Long.toString(movie_id)).build();
+        }
 
         public static Uri buildTrailerUri(long id) {
             return CONTENT_URI.buildUpon().appendPath("id").appendPath(Long.toString(id)).build();

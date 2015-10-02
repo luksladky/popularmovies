@@ -28,15 +28,15 @@ public class MovieDbHelper extends SQLiteOpenHelper {
         final String SQL_CREATE_MOVIES_TABLE = "CREATE TABLE " + MoviesEntry.TABLE_NAME +  " (" +
 
                 MoviesEntry._ID + " INTEGER PRIMARY KEY, " +
-                MoviesEntry.COLUMN_THEMOVIEDB_KEY + " STRING UNIQUE NOT NULL, " +
+                MoviesEntry.COLUMN_THEMOVIEDB_ID + " STRING UNIQUE NOT NULL, " +
                 MoviesEntry.COLUMN_TITLE + " STRING NOT NULL, " +
-                MoviesEntry.COLUMN_POSTER_KEY + " STRING, " +
+                MoviesEntry.COLUMN_POSTER_URL + " STRING, " +
                 MoviesEntry.COLUMN_DESCRIPTION + " STRING, " +
                 MoviesEntry.COLUMN_RATING + " STRING, " +
                 MoviesEntry.COLUMN_RELEASE + " STRING, " +
                 MoviesEntry.COLUMN_IS_FAVOURITE + " BOOLEAN, " +
 
-                "UNIQUE (" + MoviesEntry.COLUMN_THEMOVIEDB_KEY + ") ON CONFLICT REPLACE);";
+                "UNIQUE (" + MoviesEntry.COLUMN_THEMOVIEDB_ID + ") ON CONFLICT REPLACE);";
 
         final String SQL_CREATE_REVIEWS_TABLE = "CREATE TABLE " + ReviewsEntry.TABLE_NAME +  " (" +
 

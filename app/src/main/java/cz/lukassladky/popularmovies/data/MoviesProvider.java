@@ -17,6 +17,7 @@ public class MoviesProvider extends ContentProvider {
 
     static final int MOVIES = 100;
     static final int MOVIE_ID = 101;
+    static final int MOVIE_WITH_OMDB_ID = 102;
     static final int REVIEWS = 200;
     static final int REVIEWS_WITH_MOVIE = 201;
     static final int TRAILERS = 300;
@@ -31,7 +32,8 @@ public class MoviesProvider extends ContentProvider {
         final String authority = MoviesContract.CONTENT_AUTHORITY;
 
         matcher.addURI(authority,MoviesContract.PATH_MOVIES, MOVIES);
-        matcher.addURI(authority,MoviesContract.PATH_MOVIES + "/#/", MOVIE_ID);
+        matcher.addURI(authority,MoviesContract.PATH_MOVIES + "/id/#/", MOVIE_ID);
+        matcher.addURI(authority,MoviesContract.PATH_MOVIES + "/#/", MOVIE_WITH_OMDB_ID);
         matcher.addURI(authority,MoviesContract.PATH_REVIEWS, REVIEWS);
         matcher.addURI(authority,MoviesContract.PATH_REVIEWS + "/#/", REVIEWS_WITH_MOVIE);
         matcher.addURI(authority,MoviesContract.PATH_TRAILERS, TRAILERS);
@@ -50,10 +52,26 @@ public class MoviesProvider extends ContentProvider {
         return true;
     }
 
-    private Cursor getMoviesById(Uri uri, String[] projection, String sortOrder) {
+    private Cursor getMovieById(Uri uri, String[] projection, String sortOrder) {
         long id = MoviesContract.MoviesEntry.getIdFromUri(uri);
 
         String selection = MoviesContract.MoviesEntry._ID + " = ?";
+        String[] selectionArgs = new String[] {Long.toString(id)};
+
+        return mOpenHelper.getReadableDatabase().query(
+                MoviesContract.MoviesEntry.TABLE_NAME,
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder);
+    }
+
+    private Cursor getMovieWithOMDBId(Uri uri, String[] projection, String sortOrder) {
+        long id = MoviesContract.MoviesEntry.getIdFromUri(uri);
+
+        String selection = MoviesContract.MoviesEntry.COLUMN_THEMOVIEDB_ID + " = ?";
         String[] selectionArgs = new String[] {Long.toString(id)};
 
         return mOpenHelper.getReadableDatabase().query(
@@ -109,6 +127,8 @@ public class MoviesProvider extends ContentProvider {
                 return MoviesContract.MoviesEntry.CONTENT_TYPE;
             case MOVIE_ID:
                 return MoviesContract.MoviesEntry.CONTENT_ITEM_TYPE;
+            case MOVIE_WITH_OMDB_ID:
+                return MoviesContract.MoviesEntry.CONTENT_ITEM_TYPE;
             case REVIEWS:
             case REVIEWS_WITH_MOVIE:
                 return MoviesContract.ReviewsEntry.CONTENT_TYPE;
@@ -137,9 +157,13 @@ public class MoviesProvider extends ContentProvider {
                         sortOrder
                 );
                 break;
-            // "movies/#"
+            // "movies/id/#"
             case MOVIE_ID:
-                returnedCursor = getMoviesById(uri,projection,sortOrder);
+                returnedCursor = getMovieById(uri, projection, sortOrder);
+                break;
+            // "movies/#"
+            case MOVIE_WITH_OMDB_ID:
+                returnedCursor = getMovieWithOMDBId(uri, projection, sortOrder);
                 break;
             // "reviews"
             case REVIEWS:

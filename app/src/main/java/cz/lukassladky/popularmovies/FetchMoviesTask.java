@@ -4,19 +4,20 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 
 import cz.lukassladky.popularmovies.utils.Constants;
+import cz.lukassladky.popularmovies.utils.MovieDB;
 
 /**
  * Created by admin on 25.9.2015.
@@ -26,13 +27,12 @@ public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
     private String LOG_TAG = FetchMoviesTask.class.getSimpleName();
     FetchMovieListener mResultListener;
     ArrayList<Movie> mMoviesData;
-    ImageAdapter mImageAdapter;
 
     interface FetchMovieListener {
-        public void onDataFetched();
+        void onDataFetched();
     }
 
-    public FetchMoviesTask(FetchMovieListener context, ArrayList<Movie> movieData) {
+    public FetchMoviesTask(FetchMovieListener context, ArrayList<Movie> movieData, String apiKey) {
         mResultListener = context;
         mMoviesData = movieData;
     }
@@ -41,6 +41,7 @@ public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
     private Movie[] getMoviesDataFromJSON(String resultJSONStr) throws JSONException {
 
         final String OMDB_RESULTS = "results";
+        final String OMDB_ID = "id";
         final String OMDB_TITLE = "title";
         final String OMDB_POSTER = "poster_path";
         final String OMDB_OVERVIEW = "overview";
@@ -55,6 +56,7 @@ public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
         for (int i = 0; i < moviesJSONArray.length(); i++) {
             JSONObject movieJSON = moviesJSONArray.getJSONObject(i);
 
+            String movieId = movieJSON.getString(OMDB_ID);
             String movieTitle = movieJSON.getString(OMDB_TITLE);
             String movieOverview = movieJSON.getString(OMDB_OVERVIEW);
             String movieRating = movieJSON.getString(OMDB_RATING);
@@ -67,7 +69,13 @@ public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
             String posterImageUrl = IMAGE_BASE_URL + IMAGE_SIZE_TAG + moviePosterHash;
 
 
-            moviesArray[i] = new Movie(movieTitle,posterImageUrl, movieOverview, movieRating, movieReleaseDate);
+            moviesArray[i] = new Movie(
+                    movieId,
+                    movieTitle,
+                    posterImageUrl,
+                    movieOverview,
+                    movieRating,
+                    movieReleaseDate);
         }
 
         return moviesArray;
@@ -79,75 +87,37 @@ public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
         String sortBy  = params[0]+".desc" ;
         String minVoteCount = Integer.toString(Constants.minVoteCount);
 
-        // These two need to be declared outside the try/catch
-        // so that they can be closed in the finally block.
-        HttpURLConnection urlConnection = null;
-        BufferedReader reader = null;
+        String BASE_URL         = "http://api.themoviedb.org/3/discover/movie";
+        String API_KEY_PARAM    = "api_key";
+        String SORT_PARAM       = "sort_by";
+        String VOTE_COUNT_PARAM = "vote_count.gte";
+
         String moviesJSONStr = null;
 
+
+        Uri buildUri = Uri.parse(BASE_URL).buildUpon()
+                .appendQueryParameter(SORT_PARAM, sortBy)
+                .appendQueryParameter(VOTE_COUNT_PARAM, minVoteCount)
+                .appendQueryParameter(API_KEY_PARAM, MovieDB.API_KEY)
+                .build();
+        // Will contain the raw JSON response as a string.
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder().url(buildUri.toString()).build();
+        Call call = client.newCall(request);
+
         try {
-            String BASE_URL         = "http://api.themoviedb.org/3/discover/movie";
-            String API_KEY_PARAM    = "api_key";
-            String SORT_PARAM       = "sort_by";
-            String VOTE_COUNT_PARAM = "vote_count.gte";
-
-            Uri buildUri = Uri.parse(BASE_URL).buildUpon()
-                    .appendQueryParameter(SORT_PARAM, sortBy)
-                    .appendQueryParameter(VOTE_COUNT_PARAM, minVoteCount)
-                    .appendQueryParameter(API_KEY_PARAM, Constants.MOVIEDB_API_KEY)
-                    .build();
-            // Will contain the raw JSON response as a string.
-
-            URL url = new URL(buildUri.toString());
-            // Create the request to OpenWeatherMap, and open the connection
-            urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestMethod("GET");
-            urlConnection.connect();
-
-            // Read the input stream into a String
-            InputStream inputStream = urlConnection.getInputStream();
-            StringBuffer buffer = new StringBuffer();
-            if (inputStream == null) {
-                // Nothing to do.
-                return null;
+            Response response = call.execute();
+            if (response.isSuccessful()) {
+                moviesJSONStr = response.body().string();
             }
-            reader = new BufferedReader(new InputStreamReader(inputStream));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
-                // But it does make debugging a *lot* easier if you print out the completed
-                // buffer for debugging.
-                buffer.append(line + "\n");
-            }
-
-
-
-            if (buffer.length() == 0) {
-                // Stream was empty.  No point in parsing.
-                return null;
-            }
-            moviesJSONStr = buffer.toString();
-
-
-            //Log.v(LOG_TAG, forecastJsonStr);
-
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
+            e.printStackTrace();
             // If the code didn't successfully get the data, there's no point in attemping
             // to parse it.
             return null;
-        } finally{
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (final IOException e) {
-                    Log.e(LOG_TAG, "Error closing stream", e);
-                }
-            }
         }
 
         try {

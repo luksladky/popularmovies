@@ -1,29 +1,47 @@
 package cz.lukassladky.popularmovies;
 
+import android.content.ContentValues;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import cz.lukassladky.popularmovies.data.MoviesContract;
 
 /**
  * Created by admin on 26.8.2015.
  */
 public class Movie implements Parcelable{
 
+    private String _id;
+    private String api_id;
     private String posterUrl;
     private String title;
     private String plotOverview;
     private String userRating;
     private String releaseYear;
+    private boolean inFavorites;
 
-    public Movie(String title, String posterUrl) {
-        this.title = title;
-        this.posterUrl = getCleanUrl(posterUrl);
-    }
-    public Movie(String title, String posterUrl, String plotOverview, String userRating, String releaseDate) {
+    public Movie(String api_id, String title, String posterUrl, String plotOverview, String userRating, String releaseDate) {
+        this._id = null;
+        this.api_id = api_id;
         this.title = title;
         this.posterUrl = getCleanUrl(posterUrl);
         this.plotOverview = plotOverview;
         this.userRating = userRating;
+        this.inFavorites = false;
+
+        String dateSeparated[] = releaseDate.split("-");
+        this.releaseYear = dateSeparated[0]; //only year
+    }
+
+    public Movie(String _id, String api_id, String title, String posterUrl, String plotOverview, String userRating, String releaseDate, boolean inFavorites) {
+        this._id = _id;
+        this.api_id = api_id;
+        this.title = title;
+        this.posterUrl = getCleanUrl(posterUrl);
+        this.plotOverview = plotOverview;
+        this.userRating = userRating;
+        this.inFavorites = inFavorites;
 
         String dateSeparated[] = releaseDate.split("-");
         this.releaseYear = dateSeparated[0]; //only year
@@ -39,39 +57,27 @@ public class Movie implements Parcelable{
             return newUrl;
         }
     }
-
-    public String getPosterUrl() {
-        return posterUrl;
-    }
-    public String getTitle() {
-        return title;
-    }
+    public String get__Id() {return _id;}
+    public String getApi_id() {return api_id;}
+    public String getPosterUrl() {return posterUrl;}
+    public String getTitle() {return title;}
     public String getPlotOverview() {return plotOverview;}
     public String getYear() {return releaseYear;}
     public String getUserRating() {return userRating;}
 
-    //parcelable interface part
-    public Movie(Parcel in) {
-        String[] values = new String[5];
-        in.readStringArray(values);
-
-        this.title          = values[0];
-        this.posterUrl      = values[1];
-        this.plotOverview   = values[2];
-        this.userRating     = values[3];
-        this.releaseYear    = values[4];
+    public ContentValues getContentValues(boolean markFavourite) {
+        ContentValues cv = new ContentValues();
+        cv.put(MoviesContract.MoviesEntry.COLUMN_THEMOVIEDB_ID, this.api_id);
+        cv.put(MoviesContract.MoviesEntry.COLUMN_TITLE,this.title);
+        cv.put(MoviesContract.MoviesEntry.COLUMN_POSTER_URL,this.posterUrl);
+        cv.put(MoviesContract.MoviesEntry.COLUMN_DESCRIPTION,this.plotOverview);
+        cv.put(MoviesContract.MoviesEntry.COLUMN_RATING,this.userRating);
+        cv.put(MoviesContract.MoviesEntry.COLUMN_RELEASE,this.releaseYear);
+        cv.put(MoviesContract.MoviesEntry.COLUMN_IS_FAVOURITE, markFavourite);
+        return cv;
     }
 
-    public static final Parcelable.Creator<Movie> CREATOR
-            = new Parcelable.Creator<Movie>() {
-        public Movie createFromParcel(Parcel in) {
-            return new Movie(in);
-        }
-
-        public Movie[] newArray(int size) {
-            return new Movie[size];
-        }
-    };
+    //parcelable interface part
 
     @Override
     public int describeContents() {
@@ -80,11 +86,32 @@ public class Movie implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeStringArray(new String[]{
-                this.title,
-                this.posterUrl,
-                this.plotOverview,
-                this.userRating,
-                this.releaseYear});
+        dest.writeString(this._id);
+        dest.writeString(this.api_id);
+        dest.writeString(this.posterUrl);
+        dest.writeString(this.title);
+        dest.writeString(this.plotOverview);
+        dest.writeString(this.userRating);
+        dest.writeString(this.releaseYear);
     }
+
+    private Movie(Parcel in) {
+        this._id = in.readString();
+        this.api_id = in.readString();
+        this.posterUrl = in.readString();
+        this.title = in.readString();
+        this.plotOverview = in.readString();
+        this.userRating = in.readString();
+        this.releaseYear = in.readString();
+    }
+
+    public static final Creator<Movie> CREATOR = new Creator<Movie>() {
+        public Movie createFromParcel(Parcel source) {
+            return new Movie(source);
+        }
+
+        public Movie[] newArray(int size) {
+            return new Movie[size];
+        }
+    };
 }

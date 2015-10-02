@@ -15,14 +15,20 @@
     <string name="pref_sort_key">sort</string>
     <string name="pref_posters_sort_popularity" tranlatable="false">popularity</string>
     <string name="pref_posters_sort_rating" tranlatable="false">vote_average</string>
-    <string name="detail_favorite_button_text">Mark as favorite</string>
+    <string name="pref_posters_favorites">favorites</string>
+
+    <string name="detail_favorite_button_unmarked_text">Mark as favorite</string>
+    <string name="detail_favorite_button_marked_text">Remove from favorites</string>
+
 
     <string-array  tranlatable="false" name="pref_posters_sort_titles">
         <item>Popularity</item>
         <item>User rating</item>
+        <item>Favorites</item>
     </string-array>
     <string-array  tranlatable="false" name="pref_posters_sort_values">
         <item>@string/pref_posters_sort_popularity</item>
         <item>@string/pref_posters_sort_rating</item>
+        <item>@string/pref_posters_favorites</item>
     </string-array>
 </resources>
