@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import cz.lukassladky.popularmovies.utils.Constants;
-import cz.lukassladky.popularmovies.utils.MovieDB;
+import cz.lukassladky.popularmovies.utils.TMDB;
 
 /**
  * Created by admin on 25.9.2015.
@@ -51,31 +51,31 @@ public class FetchDetailsContentTask extends AsyncTask<Void, Void, TitleContentC
         Uri buildUri = Uri.parse(BASE_URL).buildUpon()
                 .appendPath(movieId)
                 .appendPath(postfix)
-                .appendQueryParameter(API_KEY_PARAM, MovieDB.API_KEY)
+                .appendQueryParameter(API_KEY_PARAM, TMDB.API_KEY)
                         .build();
 
         return buildUri.toString();
     }
     private TitleContentContainer[] getTrailerDataFromJSON(String resultJSONStr) throws JSONException {
 
-        final String OMDB_RESULTS = "results";
-        final String OMDB_SITE = "site";
-        final String OMDB_TITLE = "name";
-        final String OMDB_URL_KEY = "key";
+        final String TMDB_RESULTS = "results";
+        final String TMDB_SITE = "site";
+        final String TMDB_TITLE = "name";
+        final String TMDB_URL_KEY = "key";
         final String VIDEO_BASE_URL = "http://youtube.com/watch?v";
 
         JSONObject resultJSON = new JSONObject(resultJSONStr);
-        JSONArray contentJSONArray = resultJSON.getJSONArray(OMDB_RESULTS);
+        JSONArray contentJSONArray = resultJSON.getJSONArray(TMDB_RESULTS);
 
         TitleContentContainer[] moviesArray = new TitleContentContainer[contentJSONArray.length()];
 
         for (int i = 0; i < contentJSONArray.length(); i++) {
             JSONObject movieJSON = contentJSONArray.getJSONObject(i);
 
-            String trailerSite = movieJSON.getString(OMDB_SITE);
+            String trailerSite = movieJSON.getString(TMDB_SITE);
             if (!trailerSite.equals(Constants.TRAILER_VIDEO_SITE_NAME)) continue;
-            String trailerTitle = movieJSON.getString(OMDB_TITLE);
-            String trailerVideoKey = movieJSON.getString(OMDB_URL_KEY);
+            String trailerTitle = movieJSON.getString(TMDB_TITLE);
+            String trailerVideoKey = movieJSON.getString(TMDB_URL_KEY);
             String trailerUrl = VIDEO_BASE_URL + trailerVideoKey;
 
 
@@ -90,20 +90,20 @@ public class FetchDetailsContentTask extends AsyncTask<Void, Void, TitleContentC
     }
     private TitleContentContainer[] getReviewDataFromJSON(String resultJSONStr) throws JSONException {
 
-        final String OMDB_RESULTS = "results";
-        final String OMDB_AUTHOR = "author";
-        final String OMDB_CONTENT = "content";
+        final String TMDB_RESULTS = "results";
+        final String TMDB_AUTHOR = "author";
+        final String TMDB_CONTENT = "content";
 
         JSONObject resultJSON = new JSONObject(resultJSONStr);
-        JSONArray contentJSONArray = resultJSON.getJSONArray(OMDB_RESULTS);
+        JSONArray contentJSONArray = resultJSON.getJSONArray(TMDB_RESULTS);
 
         TitleContentContainer[] moviesArray = new TitleContentContainer[contentJSONArray.length()];
 
         for (int i = 0; i < contentJSONArray.length(); i++) {
             JSONObject movieJSON = contentJSONArray.getJSONObject(i);
 
-            String reviewAuthor = movieJSON.getString(OMDB_AUTHOR);
-            String reviewContent = movieJSON.getString(OMDB_CONTENT);
+            String reviewAuthor = movieJSON.getString(TMDB_AUTHOR);
+            String reviewContent = movieJSON.getString(TMDB_CONTENT);
 
 
 

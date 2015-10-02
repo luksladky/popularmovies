@@ -7,10 +7,30 @@ import android.view.MenuItem;
 
 public class DetailActivity extends AppCompatActivity {
 
+    /**
+     * add fragment with movie details as arguments
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        if (savedInstanceState == null) {
+
+            //get movie details from intent
+            Bundle arguments = new Bundle();
+            arguments.putParcelable(DetailFragment.DETAIL_MOVIE, getIntent().getData());
+
+            //set movie details as fragment arguments
+            DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(arguments);
+
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.movie_detail_container, fragment)
+                    .commit();
+        }
+
     }
 
 

@@ -1,14 +1,11 @@
 package cz.lukassladky.popularmovies;
 
-import android.app.Fragment;
-import android.app.LoaderManager;
-import android.content.CursorLoader;
-import android.content.Intent;
-import android.content.Loader;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,15 +26,28 @@ import cz.lukassladky.popularmovies.utils.Utility;
  */
 
 public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMovieListener, LoaderManager.LoaderCallbacks<Cursor> {
+    /**
+     * A callback interface that all activities containing this fragment must
+     * implement. This mechanism allows activities to be notified of item
+     * selections.
+     */
+    public interface Callback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        void onItemSelected(Movie selectedMovie);
+    }
+
 
 
     private String LOG_TAG = PostersFragment.class.getSimpleName();
 
     public static final int MOVIES_LOADER = 0;
 
-    private String sortingOrder;
+    private String mSortingOrder;
     private ImageAdapter mImageAdapter;
     private ArrayList<Movie> mMoviesData;
+    private int mPosition;
 
     private static final String[] MOVIE_COLUMNS = {
             MoviesContract.MoviesEntry._ID,
@@ -66,12 +76,10 @@ public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMo
     }
 
     private void updateMoviesData() {
-        String favoritesStr = getResources().getString(R.string.pref_posters_favorites);
-
-        if (sortingOrder.equals(favoritesStr)) {
+        if (mSortingOrder.equals(getResources().getString(R.string.pref_posters_favorites))) {
             showFavorites();
         } else {
-            new FetchMoviesTask(this, mMoviesData).execute(sortingOrder);
+            new FetchMoviesTask(this, mMoviesData).execute(mSortingOrder);
         }
 
     }
@@ -88,8 +96,8 @@ public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMo
     }
 
 
-    private void handleOfflineState() {
-        if (sortingOrder.equals(getResources().getString(R.string.pref_posters_favorites))) {
+    public void handleOfflineState() {
+        if (mSortingOrder.equals(getResources().getString(R.string.pref_posters_favorites))) {
             showFavorites();
         } else {
             Log.e(LOG_TAG, "Network is not available");
@@ -97,15 +105,21 @@ public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMo
             showToast(text.toString());
         }
     }
-
-    private String getPreferredSortingOrder() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        return prefs.getString(getString(R.string.pref_sort_key),
-                getString(R.string.pref_posters_sort_popularity));
-    }
-
+    
     public void showToast(String message) {
         Toast.makeText(getActivity(),message,Toast.LENGTH_SHORT).show();
+    }
+
+    public void onSortingOrderChanged() {
+        mSortingOrder = Utility.getPreferredSortingOrder(getActivity());
+        if (!Utility.isNetworkAvailable(getActivity())) {
+            handleOfflineState();
+            //remove old posters
+            mMoviesData.clear();
+            onDataFetched();
+        } else {
+            updateMoviesData();
+        }
     }
 
     @Override
@@ -126,13 +140,13 @@ public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMo
         if(savedInstanceState != null){
             //get back your data and populate the adapter here
 
-            mMoviesData = savedInstanceState.getParcelableArrayList(Constants.parcMoviesKey);
-            sortingOrder = savedInstanceState.getString(Constants.parcSortKey);
+            mMoviesData = savedInstanceState.getParcelableArrayList(Constants.PARC_MOVIES_ARRAY_KEY);
+            mSortingOrder = savedInstanceState.getString(Constants.parcSortKey);
 
 
         }else{
             mMoviesData  = new ArrayList<>();
-            sortingOrder = getPreferredSortingOrder();
+            mSortingOrder = Utility.getPreferredSortingOrder(getActivity());
             if (Utility.isNetworkAvailable(getActivity())) {
                 updateMoviesData();
             } else {
@@ -152,11 +166,11 @@ public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMo
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
 
                 Movie item = mImageAdapter.getItem(position);
-                Intent intent = new Intent(getActivity(), DetailActivity.class)
-                        .putExtra(Constants.parcMovieObjKey, item);
+                if (item != null) {
+                    ((Callback) getActivity()).onItemSelected(item);
+                }
 
-
-                startActivity(intent);
+                //mPosition = position;
 
             }
         });
@@ -165,32 +179,11 @@ public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMo
     }
 
     @Override
-    public void onResume() {
-        super.onResume(); // Always call the superclass method first
-        // Test Network
-
-        String newSortingOrder = getPreferredSortingOrder();
-
-        if (newSortingOrder != null && !newSortingOrder.equals(sortingOrder)) {
-            sortingOrder = newSortingOrder;
-            if (!Utility.isNetworkAvailable(getActivity())) {
-                handleOfflineState();
-                //remove old posters
-                mMoviesData.clear();
-                onDataFetched();
-            } else {
-                Log.d(LOG_TAG, "updating movies via API call");
-                updateMoviesData();
-            }
-        }
-    }
-
-    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putString(Constants.parcSortKey, sortingOrder);
-        outState.putParcelableArrayList(Constants.parcMoviesKey, mMoviesData);
+        outState.putString(Constants.parcSortKey, mSortingOrder);
+        outState.putParcelableArrayList(Constants.PARC_MOVIES_ARRAY_KEY, mMoviesData);
 
     }
 

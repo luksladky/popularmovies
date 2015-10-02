@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import cz.lukassladky.popularmovies.utils.Constants;
-import cz.lukassladky.popularmovies.utils.MovieDB;
+import cz.lukassladky.popularmovies.utils.TMDB;
 
 /**
  * Created by admin on 25.9.2015.
@@ -32,7 +32,7 @@ public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
         void onDataFetched();
     }
 
-    public FetchMoviesTask(FetchMovieListener context, ArrayList<Movie> movieData, String apiKey) {
+    public FetchMoviesTask(FetchMovieListener context, ArrayList<Movie> movieData) {
         mResultListener = context;
         mMoviesData = movieData;
     }
@@ -40,30 +40,30 @@ public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
 
     private Movie[] getMoviesDataFromJSON(String resultJSONStr) throws JSONException {
 
-        final String OMDB_RESULTS = "results";
-        final String OMDB_ID = "id";
-        final String OMDB_TITLE = "title";
-        final String OMDB_POSTER = "poster_path";
-        final String OMDB_OVERVIEW = "overview";
-        final String OMDB_RATING = "vote_average";
-        final String OMDB_RELEASE_DATE = "release_date";
+        final String TMDB_RESULTS = "results";
+        final String TMDB_ID = "id";
+        final String TMDB_TITLE = "title";
+        final String TMDB_POSTER = "poster_path";
+        final String TMDB_OVERVIEW = "overview";
+        final String TMDB_RATING = "vote_average";
+        final String TMDB_RELEASE_DATE = "release_date";
 
         JSONObject resultJSON = new JSONObject(resultJSONStr);
-        JSONArray moviesJSONArray = resultJSON.getJSONArray(OMDB_RESULTS);
+        JSONArray moviesJSONArray = resultJSON.getJSONArray(TMDB_RESULTS);
 
         Movie[] moviesArray = new Movie[moviesJSONArray.length()];
 
         for (int i = 0; i < moviesJSONArray.length(); i++) {
             JSONObject movieJSON = moviesJSONArray.getJSONObject(i);
 
-            String movieId = movieJSON.getString(OMDB_ID);
-            String movieTitle = movieJSON.getString(OMDB_TITLE);
-            String movieOverview = movieJSON.getString(OMDB_OVERVIEW);
-            String movieRating = movieJSON.getString(OMDB_RATING);
-            String movieReleaseDate = movieJSON.getString(OMDB_RELEASE_DATE);
+            String movieId = movieJSON.getString(TMDB_ID);
+            String movieTitle = movieJSON.getString(TMDB_TITLE);
+            String movieOverview = movieJSON.getString(TMDB_OVERVIEW);
+            String movieRating = movieJSON.getString(TMDB_RATING);
+            String movieReleaseDate = movieJSON.getString(TMDB_RELEASE_DATE);
 
             //get poster thumbnail full url
-            String moviePosterHash = movieJSON.getString(OMDB_POSTER);
+            String moviePosterHash = movieJSON.getString(TMDB_POSTER);
             String IMAGE_BASE_URL = "http://image.tmdb.org/t/p/";
             String IMAGE_SIZE_TAG = "w185";
             String posterImageUrl = IMAGE_BASE_URL + IMAGE_SIZE_TAG + moviePosterHash;
@@ -98,7 +98,7 @@ public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
         Uri buildUri = Uri.parse(BASE_URL).buildUpon()
                 .appendQueryParameter(SORT_PARAM, sortBy)
                 .appendQueryParameter(VOTE_COUNT_PARAM, minVoteCount)
-                .appendQueryParameter(API_KEY_PARAM, MovieDB.API_KEY)
+                .appendQueryParameter(API_KEY_PARAM, TMDB.API_KEY)
                 .build();
         // Will contain the raw JSON response as a string.
 

@@ -1,6 +1,5 @@
 package cz.lukassladky.popularmovies;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,14 +25,16 @@ import cz.lukassladky.popularmovies.utils.Utility;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class DetailActivityFragment extends Fragment implements FetchDetailsContentTask.FetchDetailContentsListener{
+public class DetailFragment extends Fragment implements FetchDetailsContentTask.FetchDetailContentsListener{
     Movie mMovie;
     ArrayList<TitleContentContainer> mReviewsData;
     ArrayList<TitleContentContainer> mTrailersData;
 
     Boolean markedFavorite;
 
-    public DetailActivityFragment() {
+    public static final String DETAIL_MOVIE = "MOVIE_D";
+
+    public DetailFragment() {
     }
 
     @Bind(R.id.detail_movie_title) TextView movie_title_textview;
@@ -55,62 +56,75 @@ public class DetailActivityFragment extends Fragment implements FetchDetailsCont
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         markedFavorite = false;
-        Intent intent = getActivity().getIntent();
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         ButterKnife.bind(this, rootView);
 
-        if (intent != null) {
-            mMovie = intent.getParcelableExtra(Constants.parcMovieObjKey);
-            movie_title_textview.setText(mMovie.getTitle());
-            release_year_textview.setText(mMovie.getYear());
-            user_rating_textview.setText(mMovie.getUserRating() + "/10");
-            overview_textview.setText(mMovie.getPlotOverview());
-            Picasso.with(rootView.getContext())
-                    .load(mMovie.getPosterUrl())
-                    .error(R.drawable.error)
-                    .placeholder(R.drawable.placeholder)
-                    .into(detail_poster_imageview);
-
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            mMovie = arguments.getParcelable(Constants.PARC_MOVIES_KEY);
             new FavoriteCheck().execute();
 
-
-            mark_favourite_button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (markedFavorite) {
-                        getActivity().getContentResolver().delete(
-                                MoviesContract.MoviesEntry.CONTENT_URI,
-                                MoviesContract.MoviesEntry.COLUMN_THEMOVIEDB_ID + " = ?",
-                                new String[] {mMovie.getApi_id()}
-                        );
-                    } else {
-                        getActivity().getContentResolver().insert(
-                                MoviesContract.MoviesEntry.CONTENT_URI,
-                                mMovie.getContentValues(true));
-                    }
-                    markedFavorite = !markedFavorite;
-                    setFavoriteButtonStyle();
-                }
-            });
-
-
-            if (Utility.isNetworkAvailable(getActivity())) {
-                mReviewsData = new ArrayList<>();
-                mTrailersData = new ArrayList<>();
-                new FetchDetailsContentTask(this,
-                        mMovie.getApi_id(),
-                        mReviewsData,
-                        Constants.TYPE_REVIEW)
-                    .execute();
-                new FetchDetailsContentTask(this,
-                        mMovie.getApi_id(),
-                        mTrailersData,
-                        Constants.TYPE_TRAILER)
-                    .execute();
+            //set movie details
+            if (mMovie != null) {
+                movie_title_textview.setText(mMovie.getTitle());
+                release_year_textview.setText(mMovie.getYear());
+                user_rating_textview.setText(mMovie.getUserRating() + "/10");
+                overview_textview.setText(mMovie.getPlotOverview());
+                Picasso.with(rootView.getContext())
+                        .load(mMovie.getPosterUrl())
+                        .error(R.drawable.error)
+                        .placeholder(R.drawable.placeholder)
+                        .into(detail_poster_imageview);
             }
+        }
 
+        mark_favourite_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (markedFavorite) {
+                    //clicked remove from favs
+                    //delete favorite movie from database
+                    getActivity().getContentResolver().delete(
+                            MoviesContract.MoviesEntry.CONTENT_URI,
+                            MoviesContract.MoviesEntry.COLUMN_THEMOVIEDB_ID + " = ?",
+                            new String[] {mMovie.getApi_id()}
+                    );
+                } else {
+                    //clicked add to favs
+                    //add new fav movie to db
+                    getActivity().getContentResolver().insert(
+                            MoviesContract.MoviesEntry.CONTENT_URI,
+                            mMovie.getContentValues(true));
+                }
+                markedFavorite = !markedFavorite;
+                setFavoriteButtonStyle();
+            }
+        });
+
+        //fetch reviews and trailers
+        if (Utility.isNetworkAvailable(getActivity())) {
+            fetchNetworkContent();
         }
         return rootView;
+    }
+        /**
+     * Helper method used to fetch reviews and trailers
+     */
+    private void fetchNetworkContent() {
+
+          /*  mReviewsData = new ArrayList<>();
+            mTrailersData = new ArrayList<>();
+            new FetchDetailsContentTask(this,
+                    mMovie.getApi_id(),
+                    mReviewsData,
+                    FetchDetailsContentTask.TYPE_REVIEW)
+                    .execute();
+            new FetchDetailsContentTask(this,
+                    mMovie.getApi_id(),
+                    mTrailersData,
+                    FetchDetailsContentTask.TYPE_TRAILER)
+                    .execute();*/
+
     }
 
     @Override

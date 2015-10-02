@@ -1,8 +1,10 @@
 package cz.lukassladky.popularmovies.utils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
 
 import cz.lukassladky.popularmovies.R;
 
@@ -17,8 +19,11 @@ public class Utility {
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    public static String getOMDBApiKey(Context context) {
-        return context.getResources().getString(R.string.omdb_api_key);
-    }
+    public static String getPreferredSortingOrder(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(
+                context.getString(R.string.pref_sort_key),
+                context.getString(R.string.pref_posters_sort_popularity));
 
+    }
 }

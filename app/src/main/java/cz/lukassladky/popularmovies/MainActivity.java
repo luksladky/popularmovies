@@ -6,13 +6,35 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity {
+import cz.lukassladky.popularmovies.utils.Constants;
+import cz.lukassladky.popularmovies.utils.Utility;
+
+public class MainActivity extends AppCompatActivity implements PostersFragment.Callback {
+
+
+    private static final String DETAILFRAGMENT_TAG = "DFTAG";
+
+    private boolean mTwoPane;
+    private String mSortingOrder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        mSortingOrder = Utility.getPreferredSortingOrder(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (findViewById(R.id.movie_detail_container) != null) {
+            mTwoPane = true; //tablet layout
+
+            if (savedInstanceState == null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.movie_detail_container, new DetailFragment(),DETAILFRAGMENT_TAG)
+                        .commit();
+            }
+
+        } else {
+            mTwoPane = false; //phone layout
+        }
     }
 
 
@@ -38,4 +60,48 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    public void onItemSelected(Movie selectedMovie) {
+        if (mTwoPane) {
+
+            Bundle arguments = new Bundle();
+            arguments.putParcelable(Constants.PARC_MOVIES_KEY,selectedMovie);
+
+            DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(arguments);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.movie_detail_container,fragment)
+                    .commit();
+
+        } else {
+            Intent intent = new Intent(this,DetailActivity.class)
+                    .putExtra(Constants.PARC_MOVIES_KEY,selectedMovie);
+            startActivity(intent);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume(); // Always call the superclass method first
+        // Test Network
+
+        String newSortingOrder = Utility.getPreferredSortingOrder(this);
+
+        if (newSortingOrder != null && !newSortingOrder.equals(mSortingOrder)) {
+            PostersFragment pf = (PostersFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.fragment_posters);
+            if (pf != null ) {
+                pf.onSortingOrderChanged();
+            }
+            /*DetailFragment df = (DetailFragment) getSupportFragmentManager()
+                    .findFragmentByTag(DETAILFRAGMENT_TAG);
+            if (df != null ) {
+
+            }*/
+
+            mSortingOrder = newSortingOrder;
+        }
+    }
+
 }
