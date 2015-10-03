@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-import butterknife.Bind;
 import cz.lukassladky.popularmovies.data.MoviesContract;
 import cz.lukassladky.popularmovies.utils.Constants;
 import cz.lukassladky.popularmovies.utils.Utility;
@@ -92,6 +91,13 @@ public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMo
     public void onDataFetched() {
         if (mImageAdapter != null) {
             mImageAdapter.notifyDataSetChanged();
+            //select first movie
+            /*if (mTwoPane) {
+                Movie item = mImageAdapter.getItem(0);
+                if (item != null) {
+                    ((Callback) getActivity()).onItemSelected(item);
+                }
+            }*/
         }
     }
 
@@ -126,16 +132,6 @@ public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMo
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-    }
-
-    @Bind(R.id.gridview) GridView gridView;
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        final View rootView = inflater.inflate(R.layout.fragment_posters, container, false);
 
         if(savedInstanceState != null){
             //get back your data and populate the adapter here
@@ -153,13 +149,18 @@ public class PostersFragment extends Fragment implements FetchMoviesTask.FetchMo
                 handleOfflineState();
             }
         }
+    }
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
+        final View rootView = inflater.inflate(R.layout.fragment_posters, container, false);
 
         mImageAdapter = new ImageAdapter(
                 rootView.getContext(),
                 mMoviesData);
 
-        //ButterKnife.bind(this,rootView);
         GridView gridView = (GridView) rootView.findViewById(R.id.gridview);
         gridView.setAdapter(mImageAdapter);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

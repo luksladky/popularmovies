@@ -63,7 +63,9 @@ public class Movie implements Parcelable{
     public String getTitle() {return title;}
     public String getPlotOverview() {return plotOverview;}
     public String getYear() {return releaseYear;}
-    public String getUserRating() {return userRating;}
+    public String getUserRating() {
+        return String.format("%s/10",userRating);
+    }
 
     public ContentValues getContentValues(boolean markFavourite) {
         ContentValues cv = new ContentValues();

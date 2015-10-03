@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:xliff="http://schemas.android.com/apk/res-auto">
     <string name="app_name">Popular movies</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
@@ -19,6 +19,7 @@
 
     <string name="detail_favorite_button_unmarked_text">Mark as favorite</string>
     <string name="detail_favorite_button_marked_text">Remove from favorites</string>
+    <string name="action_share">Share trailer</string>
 
 
     <string-array  tranlatable="false" name="pref_posters_sort_titles">
@@ -31,4 +32,5 @@
         <item>@string/pref_posters_sort_rating</item>
         <item>@string/pref_posters_favorites</item>
     </string-array>
+
 </resources>

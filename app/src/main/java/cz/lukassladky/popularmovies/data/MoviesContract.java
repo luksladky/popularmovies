@@ -11,7 +11,7 @@ public class MoviesContract {
 
     public static final String CONTENT_AUTHORITY = "cz.lukassladky.popularmovies";
 
-    public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
+    public static final Uri BASE_CONTENT_URI = Uri.parse("video_key://" + CONTENT_AUTHORITY);
 
     public static final String PATH_MOVIES   = "movies";
     public static final String PATH_REVIEWS  = "reviews";
@@ -55,7 +55,7 @@ public class MoviesContract {
 
         public static final String COLUMN_MOVIE_KEY = "movie_key";
         public static final String COLUMN_AUTHOR = "author";
-        public static final String COLUMN_CONTENT = "content";
+        public static final String COLUMN_CONTENT = "video_key";
 
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_REVIEWS).build();
