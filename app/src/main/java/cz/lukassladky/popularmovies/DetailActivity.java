@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import cz.lukassladky.popularmovies.utils.Constants;
+
 public class DetailActivity extends AppCompatActivity {
 
     /**
@@ -20,7 +22,9 @@ public class DetailActivity extends AppCompatActivity {
 
             //get movie details from intent
             Bundle arguments = new Bundle();
-            arguments.putParcelable(DetailFragment.DETAIL_MOVIE, getIntent().getData());
+            arguments.putParcelable(
+                    DetailFragment.DETAIL_MOVIE,
+                    getIntent().getParcelableExtra(Constants.PARC_MOVIES_KEY));
 
             //set movie details as fragment arguments
             DetailFragment fragment = new DetailFragment();

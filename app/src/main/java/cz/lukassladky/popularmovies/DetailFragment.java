@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import cz.lukassladky.popularmovies.data.MoviesContract;
-import cz.lukassladky.popularmovies.utils.Constants;
 import cz.lukassladky.popularmovies.utils.Utility;
 
 /**
@@ -80,12 +79,13 @@ public class DetailFragment extends Fragment implements FetchTrailersTask.FetchT
 
         Bundle arguments = getArguments();
         if (arguments != null) {
-            mMovie = arguments.getParcelable(Constants.PARC_MOVIES_KEY);
-            mFavoriteCheckTask = new FavoriteCheckTask();
-            mFavoriteCheckTask.execute();
+            mMovie = arguments.getParcelable(DetailFragment.DETAIL_MOVIE);
 
             //set movie details
             if (mMovie != null) {
+                mFavoriteCheckTask = new FavoriteCheckTask();
+                mFavoriteCheckTask.execute();
+
                 movie_title_textview.setText(mMovie.getTitle());
                 release_year_textview.setText(mMovie.getYear());
                 user_rating_textview.setText(mMovie.getUserRating());
