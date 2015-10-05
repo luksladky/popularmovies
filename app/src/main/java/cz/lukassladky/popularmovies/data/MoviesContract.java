@@ -11,7 +11,7 @@ public class MoviesContract {
 
     public static final String CONTENT_AUTHORITY = "cz.lukassladky.popularmovies";
 
-    public static final Uri BASE_CONTENT_URI = Uri.parse("video_key://" + CONTENT_AUTHORITY);
+    public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     public static final String PATH_MOVIES   = "movies";
     public static final String PATH_REVIEWS  = "reviews";
