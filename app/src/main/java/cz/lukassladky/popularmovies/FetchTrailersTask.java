@@ -126,6 +126,7 @@ public class FetchTrailersTask extends AsyncTask<Void, Void, Trailer[]> {
         super.onPostExecute(result);
         ArrayList<Trailer> data = new ArrayList<>();
         data.clear();
+        if (result == null) return;
         for (int i = 0; i < result.length; i++) {
             //Log.v(LOG_TAG, result[i].getTitle());
             data.add(result[i]);
